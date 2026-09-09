@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Network Traffic Monitoring Dashboard</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f7fb;
+            color: #1e293b;
+            line-height: 1.5;
+        }
+
+        /* ================= HEADER ================= */
+
+        .header {
+            background: linear-gradient(135deg, #0f4c81, #2563eb);
+            color: white;
+            padding: 28px 20px;
+            box-shadow: 0 4px 12px rgba(15, 76, 129, 0.18);
+        }
+
+        .header-content {
+            max-width: 1250px;
+            margin: 0 auto;
+        }
+
+        .header h1 {
+            font-size: 30px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .header p {
+            font-size: 15px;
+            opacity: 0.9;
+        }
+
+        /* ================= CONTAINER ================= */
+
+        .container {
+            width: 92%;
+            max-width: 1250px;
+            margin: 30px auto 50px;
+        }
+
+        /* ================= SECTION TITLE ================= */
+
+        .section-title {
+            color: #0f4c81;
+            font-size: 22px;
+            font-weight: 700;
+            margin: 30px 0 16px;
+            padding-left: 12px;
+            border-left: 4px solid #2563eb;
+        }
+
+        /* ================= CARDS ================= */
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 22px;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.07);
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s ease,
+                        box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(15, 23, 42, 0.1);
+        }
+
+        .card h3 {
+            color: #334155;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+
+        /* ================= METRICS ================= */
+
+        .metric {
+            font-size: 30px;
+            font-weight: 700;
+            color: #2563eb;
+        }
+
+        .metric-subtitle {
+            margin-top: 5px;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        /* ================= STATUS ================= */
+
+        .status-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 150px;
+        }
+
+        .status {
+            display: inline-block;
+            width: fit-content;
+            padding: 7px 13px;
+            border-radius: 20px;
+            background: #e0f2fe;
+            color: #0369a1;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .message {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        /* ================= PROTOCOL ================= */
+
+        .protocol-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-top: 8px;
+        }
+
+        .protocol-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 9px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .protocol-name {
+            display: block;
+            color: #64748b;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+        .protocol-count {
+            font-size: 23px;
+            font-weight: 700;
+            color: #2563eb;
+        }
+
+        /* ================= ANOMALY ================= */
+
+        .anomaly-card {
+            border-left: 5px solid #2563eb;
+        }
+
+        .anomaly-status {
+            display: inline-block;
+            padding: 7px 13px;
+            border-radius: 20px;
+            background: #dcfce7;
+            color: #166534;
+            font-weight: 700;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+
+        /* ================= BANDWIDTH ================= */
+
+        .bandwidth-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .bandwidth-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bandwidth-card.download {
+            border-top: 4px solid #2563eb;
+        }
+
+        .bandwidth-card.upload {
+            border-top: 4px solid #0f766e;
+        }
+
+        .speed {
+            font-size: 29px;
+            font-weight: 700;
+            color: #2563eb;
+        }
+
+        .upload .speed {
+            color: #0f766e;
+        }
+
+        .speed-label {
+            color: #64748b;
+            font-size: 13px;
+            margin-top: 3px;
+        }
+
+        /* ================= LIVE ================= */
+
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            color: #16a34a;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 12px;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #16a34a;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.45;
+                transform: scale(1.25);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+        }
+
+        /* ================= OPTIMIZATION ================= */
+
+        .optimization-card {
+            background: white;
+            border-left: 5px solid #2563eb;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.07);
+            border-top: 1px solid #e2e8f0;
+            border-right: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .optimization-card h3 {
+            color: #0f4c81;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .optimization-card p {
+            color: #475569;
+            font-size: 15px;
+        }
+
+        /* ================= GRAPHS ================= */
+
+        .graphs {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 22px;
+        }
+
+        .graph-card {
+            background: white;
+            border-radius: 12px;
+            padding: 18px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.07);
+        }
+
+        .graph-card h3 {
+            color: #334155;
+            font-size: 16px;
+            margin-bottom: 14px;
+        }
+
+       .graph-card img {
+          display: block;
+         width: 100%;
+         max-width: 100%;
+         height: auto;
+        min-height: 250px;
+        max-height: 430px;
+        object-fit: contain;
+        border-radius: 8px;
+        background: #f8fafc;
+}
+
+        /* ================= FOOTER ================= */
+
+        .footer {
+            text-align: center;
+            color: #64748b;
+            font-size: 13px;
+            padding: 25px 15px;
+            border-top: 1px solid #e2e8f0;
+            background: white;
+        }
+
+        /* ================= RESPONSIVE ================= */
+
+        @media (max-width: 900px) {
+
+            .cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .graphs {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+        @media (max-width: 600px) {
+
+            .header {
+                padding: 22px 16px;
+            }
+
+            .header h1 {
+                font-size: 23px;
+            }
+
+            .container {
+                width: 94%;
+                margin-top: 20px;
+            }
+
+            .section-title {
+                font-size: 19px;
+                margin-top: 24px;
+            }
+
+            .cards,
+            .bandwidth-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .protocol-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 18px;
+            }
+
+            .metric,
+            .speed {
+                font-size: 26px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+    <!-- ================= HEADER ================= -->
+
+    <header class="header">
+
+        <div class="header-content">
+
+            <h1>
+                Network Traffic Monitoring Dashboard
+            </h1>
+
+            <p>
+                Real-Time Network Analysis &amp; Optimization
+            </p>
+
+        </div>
+
+    </header>
+
+
+    <main class="container">
+
+
+        <!-- ================= NETWORK OVERVIEW ================= -->
+
+        <h2 class="section-title">
+            Network Overview
+        </h2>
+
+
+        <section class="cards">
+
+
+            <!-- TOTAL PACKETS -->
+
+            <div class="card">
+
+                <h3>
+                    Total Packets
+                </h3>
+
+                <div
+                    class="metric"
+                    id="total-packets"
+                >
+                    {{ total_packets }}
+                </div>
+
+                <div class="metric-subtitle">
+                    Captured network packets
+                </div>
+
+            </div>
+
+
+            <!-- TOTAL TRAFFIC -->
+
+            <div class="card">
+
+                <h3>
+                    Total Traffic
+                </h3>
+
+                <div
+                    class="metric"
+                    id="total-traffic"
+                >
+                    {{ total_traffic }} B
+                </div>
+
+                <div class="metric-subtitle">
+                    Total captured network data
+                </div>
+
+            </div>
+
+
+            <!-- AVERAGE PACKET -->
+
+            <div class="card">
+
+                <h3>
+                    Average Packet
+                </h3>
+
+                <div
+                    class="metric"
+                    id="average-packet"
+                >
+                    {{ average_packet }} B
+                </div>
+
+                <div class="metric-subtitle">
+                    Average packet size
+                </div>
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- ================= MONITORING ================= -->
+
+        <h2 class="section-title">
+            Monitoring
+        </h2>
+
+
+        <section class="cards">
+
+
+            <!-- TRAFFIC STATUS -->
+
+            <div class="card status-card">
+
+                <h3>
+                    Traffic Status
+                </h3>
+
+                <span
+                    class="status"
+                    id="traffic-status"
+                >
+                    {{ traffic_status }}
+                </span>
+
+                <p class="message">
+                    {{ traffic_message }}
+                </p>
+
+            </div>
+
+
+            <!-- PROTOCOL ANALYSIS -->
+
+            <div class="card">
+
+                <h3>
+                    Protocol Analysis
+                </h3>
+
+
+                <div class="protocol-grid">
+
+
+                    <div class="protocol-item">
+
+                        <span class="protocol-name">
+                            TCP
+                        </span>
+
+                        <span
+                            class="protocol-count"
+                            id="tcp-count"
+                        >
+                            {{ tcp_count }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="protocol-item">
+
+                        <span class="protocol-name">
+                            UDP
+                        </span>
+
+                        <span
+                            class="protocol-count"
+                            id="udp-count"
+                        >
+                            {{ udp_count }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="protocol-item">
+
+                        <span class="protocol-name">
+                            Other
+                        </span>
+
+                        <span
+                            class="protocol-count"
+                            id="other-count"
+                        >
+                            {{ other_count }}
+                        </span>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+
+            <!-- ANOMALY DETECTION -->
+
+            <div class="card status-card anomaly-card">
+
+                <h3>
+                    Anomaly Detection
+                </h3>
+
+                <span
+                    class="anomaly-status"
+                    id="anomaly-status"
+                >
+                    {{ anomaly_status }}
+                </span>
+
+                <p
+                    class="message"
+                    id="anomaly-message"
+                >
+                    {{ anomaly_message }}
+                </p>
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- ================= REAL-TIME BANDWIDTH ================= -->
+
+        <h2 class="section-title">
+            Real-Time Bandwidth
+        </h2>
+
+
+        <section class="bandwidth-grid">
+
+
+            <!-- DOWNLOAD -->
+
+            <div class="card bandwidth-card download">
+
+                <h3>
+                    Download
+                </h3>
+
+                <div class="speed">
+
+                    <span id="download-speed">
+                        {{ download_speed }}
+                    </span>
+
+                    KB/s
+
+                </div>
+
+                <div class="speed-label">
+                    Current download speed
+                </div>
+
+                <div class="live-indicator">
+
+                    <span class="live-dot"></span>
+
+                    Live monitoring
+
+                </div>
+
+            </div>
+
+
+            <!-- UPLOAD -->
+
+            <div class="card bandwidth-card upload">
+
+                <h3>
+                    Upload
+                </h3>
+
+                <div class="speed">
+
+                    <span id="upload-speed">
+                        {{ upload_speed }}
+                    </span>
+
+                    KB/s
+
+                </div>
+
+                <div class="speed-label">
+                    Current upload speed
+                </div>
+
+                <div class="live-indicator">
+
+                    <span class="live-dot"></span>
+
+                    Live monitoring
+
+                </div>
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- ================= NETWORK OPTIMIZATION ================= -->
+
+        <h2 class="section-title">
+            Network Optimization
+        </h2>
+
+
+        <section class="optimization-card">
+
+            <h3>
+                Smart Recommendation
+            </h3>
+
+            <p id="recommendation">
+                {{ recommendation }}
+            </p>
+
+        </section>
+
+
+
+        <!-- ================= NETWORK ANALYSIS GRAPHS ================= -->
+
+        <h2 class="section-title">
+            Network Analysis Graphs
+        </h2>
+
+
+        <section class="graphs">
+
+
+            <!-- TRAFFIC GRAPH -->
+
+            <div class="graph-card">
+
+                <h3>
+                    Traffic Analysis
+                </h3>
+
+                <img
+                    src="{{ url_for('static', filename='graphs/traffic_graph.png') }}"
+                    alt="Traffic Analysis Graph"
+                >
+
+            </div>
+
+
+            <!-- PROTOCOL GRAPH -->
+
+            <div class="graph-card">
+
+                <h3>
+                    Protocol Distribution
+                </h3>
+
+                <img
+                    src="{{ url_for('static', filename='graphs/protocol_graph.png') }}"
+                    alt="Protocol Distribution Graph"
+                >
+
+            </div>
+
+
+            <!-- BANDWIDTH GRAPH -->
+
+            <div class="graph-card">
+
+                <h3>
+                    Bandwidth Usage
+                </h3>
+
+                <img
+                   id="bandwidth-graph"
+    src="{{ url_for('static', filename='graphs/bandwidth_graph.png') }}"
+    alt="Bandwidth Usage Graph"
+     loading="eager"
+                >
+
+            </div>
+
+
+            <!-- ANOMALY GRAPH -->
+
+            <div class="graph-card">
+
+                <h3>
+                    Anomaly Analysis
+                </h3>
+
+                <img
+                    src="{{ url_for('static', filename='graphs/anomaly_graph.png') }}"
+                    alt="Anomaly Analysis Graph"
+                >
+
+            </div>
+
+
+        </section>
+
+
+    </main>
+
+
+
+    <!-- ================= FOOTER ================= -->
+
+    <footer class="footer">
+
+        Network Traffic Monitoring &amp;
+        Optimization Dashboard
+
+    </footer>
+
+
+
+   <!-- ================= JAVASCRIPT ================= -->
+
+<script>
+
+    /* =====================================================
+       LIVE DASHBOARD UPDATE
+    ===================================================== */
+
+    async function updateLiveData() {
+
+        try {
+
+            const response = await fetch(
+                "/live-data?t=" + new Date().getTime()
+            );
+
+            if (!response.ok) {
+                throw new Error("Live data request failed");
+            }
+
+            const data = await response.json();
+
+
+            /* =============================================
+               NETWORK OVERVIEW
+            ============================================= */
+
+            document.getElementById(
+                "total-packets"
+            ).textContent = data.total_packets;
+
+
+            document.getElementById(
+                "total-traffic"
+            ).textContent =
+                data.total_traffic + " B";
+
+
+            document.getElementById(
+                "average-packet"
+            ).textContent =
+                data.average_packet + " B";
+
+
+            /* =============================================
+               PROTOCOL ANALYSIS
+            ============================================= */
+
+            document.getElementById(
+                "tcp-count"
+            ).textContent = data.tcp_count;
+
+
+            document.getElementById(
+                "udp-count"
+            ).textContent = data.udp_count;
+
+
+            document.getElementById(
+                "other-count"
+            ).textContent = data.other_count;
+
+
+            /* =============================================
+               TRAFFIC STATUS
+            ============================================= */
+
+            document.getElementById(
+                "traffic-status"
+            ).textContent = data.traffic_status;
+
+
+            /* =============================================
+               ANOMALY
+            ============================================= */
+
+            document.getElementById(
+                "anomaly-status"
+            ).textContent = data.anomaly_status;
+
+
+            document.getElementById(
+                "anomaly-message"
+            ).textContent = data.anomaly_message;
+
+
+            /* =============================================
+               BANDWIDTH
+            ============================================= */
+
+            document.getElementById(
+                "download-speed"
+            ).textContent =
+                Number(data.download_speed).toFixed(2);
+
+
+            document.getElementById(
+                "upload-speed"
+            ).textContent =
+                Number(data.upload_speed).toFixed(2);
+
+
+            /* =============================================
+               RECOMMENDATION
+            ============================================= */
+
+            document.getElementById(
+                "recommendation"
+            ).textContent =
+                data.recommendation;
+
+
+            /* =============================================
+               BANDWIDTH GRAPH
+            ============================================= */
+
+            const graph =
+                document.getElementById(
+                    "bandwidth-graph"
+                );
+
+            if (graph) {
+
+                graph.src =
+                    "{{ url_for('static', filename='graphs/bandwidth_graph.png') }}"
+                    + "?t="
+                    + new Date().getTime();
+
+            }
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "Live data update error:",
+                error
+            );
+
+        }
+
+    }
+
+
+    /* =====================================================
+       INITIAL UPDATE
+    ===================================================== */
+
+    updateLiveData();
+
+
+    /* =====================================================
+       UPDATE EVERY 2 SECONDS
+    ===================================================== */
+
+    setInterval(
+        updateLiveData,
+        2000
+    );
+
+</script>
